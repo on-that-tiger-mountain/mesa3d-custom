@@ -1882,11 +1882,8 @@ else
   dep_llvmspirvlib = null_dep
 endif
 
-dep_spirv_tools = dependency(
-  'SPIRV-Tools',
-  required : with_clc,
-  version : '>= 2022.1'
-)
+dep_spirv_tools = null_dep
+
 if dep_spirv_tools.found()
   pre_args += '-DHAVE_SPIRV_TOOLS'
 endif
@@ -1924,7 +1921,7 @@ endif
 dep_lua = dependency('lua54', 'lua5.4', 'lua-5.4',
                      'lua53', 'lua5.3', 'lua-5.3',
                      'lua', required: false,
-                     allow_fallback: with_tools.contains('freedreno'),
+                     allow_fallback: false,
                      version: '>=5.3')
 
 # Be explicit about only using this lib on Windows, to avoid picking
