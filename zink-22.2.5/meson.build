@@ -246,6 +246,10 @@ if with_gallium and system_has_kms_drm
   endif
 endif
 
+if with_gallium_zink
+  pre_args += '-DGALLIUM_ZINK'
+endif
+
 _vulkan_drivers = get_option('vulkan-drivers')
 if _vulkan_drivers.contains('auto')
   if system_has_kms_drm
@@ -553,8 +557,6 @@ if with_glx != 'disabled'
   elif with_glx == 'xlib'
     if not with_gallium
       error('xlib based GLX requires at least one gallium driver')
-    elif not with_gallium_softpipe
-      error('xlib based GLX requires softpipe or llvmpipe.')
     elif with_dri
       error('xlib conflicts with any dri driver')
     endif

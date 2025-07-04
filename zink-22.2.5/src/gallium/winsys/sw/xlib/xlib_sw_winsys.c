@@ -160,18 +160,23 @@ alloc_shm_ximage(struct xlib_displaytarget *xlib_dt,
    int (*old_handler)(Display *, XErrorEvent *);
 
    xlib_dt->tempImage = XShmCreateImage(xlib_dt->display,
-                                      xmb->visual,
-                                      xmb->depth,
-                                      ZPixmap,
-                                      NULL,
-                                      &xlib_dt->shminfo,
-                                      width, height);
+                                        xmb->visual,
+                                        xmb->depth,
+                                        ZPixmap,
+                                        NULL,
+                                        &xlib_dt->shminfo,
+                                        width, height);
    if (xlib_dt->tempImage == NULL) {
       shmctl(xlib_dt->shminfo.shmid, IPC_RMID, 0);
       xlib_dt->shm = False;
       return;
    }
 
+   XShmCreatePixmap(xlib_dt->display, 
+                    xmb->drawable,
+                    NULL, 
+                    &xlib_dt->shminfo, 
+                    width, height, xmb->depth);
 
    XErrorFlag = 0;
    old_handler = XSetErrorHandler(handle_xerror);
@@ -213,11 +218,11 @@ alloc_ximage(struct xlib_displaytarget *xlib_dt,
 
    /* try regular (non-shared memory) image */
    xlib_dt->tempImage = XCreateImage(xlib_dt->display,
-                                   xmb->visual,
-                                   xmb->depth,
-                                   ZPixmap, 0,
-                                   NULL, width, height,
-                                   8, 0);
+                                     xmb->visual,
+                                     xmb->depth,
+                                     ZPixmap, 0,
+                                     NULL, width, height,
+                                     8, 0);
 }
 
 static bool

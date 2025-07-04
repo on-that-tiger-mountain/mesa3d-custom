@@ -166,6 +166,7 @@ struct zink_resource {
    };
 
    bool swapchain;
+   struct sw_displaytarget *dt;
    bool dmabuf_acquire;
    bool dmabuf;
    unsigned dt_stride;

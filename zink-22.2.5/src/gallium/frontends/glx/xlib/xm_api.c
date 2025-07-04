@@ -1013,6 +1013,10 @@ XMesaContext XMesaCreateContext( XMesaVisual v, XMesaContext share_list,
       assert(0);
       goto no_st;
    }
+   
+   /* Workaround for Rage and others */
+   attribs.options.allow_glsl_builtin_variable_redeclaration = true;
+   attribs.options.force_gl_map_buffer_synchronized = true;
 
    c->st = stapi->create_context(stapi, xmdpy->smapi, &attribs,
          &ctx_err, (share_list) ? share_list->st : NULL);

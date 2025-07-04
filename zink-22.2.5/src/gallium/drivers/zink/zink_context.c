@@ -4642,6 +4642,13 @@ zink_context_create(struct pipe_screen *pscreen, void *priv, unsigned flags)
     */
    if (screen->info.dynamic_state2_feats.extendedDynamicState2PatchControlPoints)
       VKCTX(CmdSetPatchControlPointsEXT)(ctx->batch.state->cmdbuf, 1);
+  
+   const char *zink_context_threaded_value = getenv("ZINK_CONTEXT_THREADED");
+
+   flags &= ~PIPE_CONTEXT_PREFER_THREADED;
+   if (zink_context_threaded_value && (strcmp(zink_context_threaded_value, "true") == 0 || strcmp(zink_context_threaded_value, "1") == 0)) {
+      flags |= PIPE_CONTEXT_PREFER_THREADED;
+   }  
 
    if (!(flags & PIPE_CONTEXT_PREFER_THREADED) || flags & PIPE_CONTEXT_COMPUTE_ONLY) {
       return &ctx->base;

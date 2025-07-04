@@ -53,6 +53,8 @@
 
 #include "util/u_cpu_detect.h"
 
+#include "frontend/sw_winsys.h"
+
 #if DETECT_OS_WINDOWS
 #include <io.h>
 #define VK_LIBNAME "vulkan-1.dll"
@@ -1438,30 +1440,55 @@ zink_flush_frontbuffer(struct pipe_screen *pscreen,
 {
    struct zink_screen *screen = zink_screen(pscreen);
    struct zink_resource *res = zink_resource(pres);
-   struct zink_context *ctx = zink_context(pctx);
+   struct sw_winsys *winsys = screen->winsys;
 
-   /* if the surface has never been acquired, there's nothing to present,
-    * so this is a no-op */
-   if (!zink_is_swapchain(res) || (!zink_kopper_acquired(res->obj->dt, res->obj->dt_idx) && res->obj->last_dt_idx == UINT32_MAX))
-      return;
+   if (winsys && res->dt) {
+      void *map = winsys->displaytarget_map(winsys, res->dt, 0);
 
-   ctx = zink_tc_context_unwrap(pctx);
-   if (ctx->batch.swapchain || ctx->needs_present) {
-      ctx->batch.has_work = true;
-      pctx->flush(pctx, NULL, PIPE_FLUSH_END_OF_FRAME);
-      if (ctx->last_fence && screen->threaded) {
-         struct zink_batch_state *bs = zink_batch_state(ctx->last_fence);
-         util_queue_fence_wait(&bs->flush_completed);
+      if (map) {
+         struct pipe_transfer *transfer = NULL;
+	  
+	     pctx = &screen->copy_context->base;
+	  
+         void *res_map = pipe_texture_map(pctx, pres, level, layer, PIPE_MAP_READ, 0, 0,
+                                          u_minify(pres->width0, level),
+                                          u_minify(pres->height0, level),
+                                          &transfer);
+         if (res_map) {
+            util_copy_rect((ubyte*)map, pres->format, res->dt_stride, 0, 0,
+                           transfer->box.width, transfer->box.height,
+                           (const ubyte*)res_map, transfer->stride, 0, 0);
+            pipe_texture_unmap(pctx, transfer);
+         }
+         winsys->displaytarget_unmap(winsys, res->dt);
       }
-   }
 
-   if (zink_kopper_acquired(res->obj->dt, res->obj->dt_idx))
-      zink_kopper_present_queue(screen, res);
-   else {
-      assert(res->obj->last_dt_idx != UINT32_MAX);
-      if (!zink_kopper_last_present_eq(res->obj->dt, res->obj->last_dt_idx)) {
-         zink_kopper_acquire_readback(ctx, res);
-         zink_kopper_present_readback(ctx, res);
+      winsys->displaytarget_display(winsys, res->dt, winsys_drawable_handle, sub_box);        
+   } else {
+      struct zink_context *ctx = zink_context(pctx);
+      /* if the surface has never been acquired, there's nothing to present,
+       * so this is a no-op */
+      if (!zink_is_swapchain(res) || (!zink_kopper_acquired(res->obj->dt, res->obj->dt_idx) && res->obj->last_dt_idx == UINT32_MAX))
+         return;
+
+      ctx = zink_tc_context_unwrap(pctx);
+      if (ctx->batch.swapchain || ctx->needs_present) {
+         ctx->batch.has_work = true;
+         pctx->flush(pctx, NULL, PIPE_FLUSH_END_OF_FRAME);
+         if (ctx->last_fence && screen->threaded) {
+            struct zink_batch_state *bs = zink_batch_state(ctx->last_fence);
+            util_queue_fence_wait(&bs->flush_completed);
+         }
+      }
+
+      if (zink_kopper_acquired(res->obj->dt, res->obj->dt_idx))
+         zink_kopper_present_queue(screen, res);
+      else {
+         assert(res->obj->last_dt_idx != UINT32_MAX);
+         if (!zink_kopper_last_present_eq(res->obj->dt, res->obj->last_dt_idx)) {
+            zink_kopper_acquire_readback(ctx, res);
+            zink_kopper_present_readback(ctx, res);
+         }
       }
    }
 }
@@ -2410,6 +2437,7 @@ zink_create_screen(struct sw_winsys *winsys, const struct pipe_screen_config *co
 {
    struct zink_screen *ret = zink_internal_create_screen(config);
    if (ret) {
+      ret->winsys = winsys;
       ret->drm_fd = -1;
    }
 

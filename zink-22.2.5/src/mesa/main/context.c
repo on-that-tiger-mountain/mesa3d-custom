@@ -1466,7 +1466,7 @@ _mesa_make_current( struct gl_context *newCtx,
 
    if (MESA_VERBOSE & VERBOSE_API)
       _mesa_debug(newCtx, "_mesa_make_current()\n");
-
+#ifndef GALLIUM_ZINK
    /* Check that the context's and framebuffer's visuals are compatible.
     */
    if (newCtx && drawBuffer && newCtx->WinSysDrawBuffer != drawBuffer) {
@@ -1483,7 +1483,7 @@ _mesa_make_current( struct gl_context *newCtx,
          return GL_FALSE;
       }
    }
-
+#endif
    if (curCtx &&
        /* make sure this context is valid for flushing */
        curCtx != newCtx &&
