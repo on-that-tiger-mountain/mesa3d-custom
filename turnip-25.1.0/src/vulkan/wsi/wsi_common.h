@@ -181,6 +181,8 @@ struct wsi_device {
    } win32;
 
    bool sw;
+   
+   bool force_wait_for_fences;
 
    /* Set to true if the implementation is ok with linear WSI images. */
    bool wants_linear;
@@ -288,6 +290,9 @@ struct wsi_device_options {
    bool sw_device;
    bool extra_xwayland_image;
 };
+
+bool
+wsi_init_pthread_cond_monotonic(pthread_cond_t* cond);
 
 VkResult
 wsi_device_init(struct wsi_device *wsi,
