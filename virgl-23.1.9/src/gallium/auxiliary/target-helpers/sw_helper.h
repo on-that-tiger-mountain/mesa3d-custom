@@ -34,7 +34,7 @@
 
 #ifdef GALLIUM_VIRGL
 #include "virgl/virgl_public.h"
-#include "virgl/vtest/virgl_vtest_public.h"
+#include "virgl/server/virgl_server_public.h"
 #endif
 
 static inline struct pipe_screen *
@@ -50,7 +50,7 @@ sw_screen_create_named(struct sw_winsys *winsys, const struct pipe_screen_config
 #if defined(GALLIUM_VIRGL)
    if (screen == NULL && strcmp(driver, "virpipe") == 0) {
       struct virgl_winsys *vws;
-      vws = virgl_vtest_winsys_wrap(winsys);
+      vws = virgl_server_winsys_wrap(winsys);
       screen = virgl_create_screen(vws, NULL);
    }
 #endif

@@ -20,12 +20,21 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
  * USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-#ifndef VIRGL_VTEST_PUBLIC_H
-#define VIRGL_VTEST_PUBLIC_H
+#ifndef VIRGL_SERVER_PROTOCOL_H
+#define VIRGL_SERVER_PROTOCOL_H
 
-struct virgl_winsys;
-struct sw_winsys;
+#define VIRGL_DEFAULT_SERVER_PATH "/tmp/.virgl_server"
 
-struct virgl_winsys *virgl_vtest_winsys_wrap(struct sw_winsys *sws);
+#define VCMD_CREATE_RENDERER 1
+#define VCMD_GET_CAPS 2
+#define VCMD_RESOURCE_CREATE 3
+#define VCMD_RESOURCE_DESTROY 4
+#define VCMD_TRANSFER_GET 5
+#define VCMD_TRANSFER_PUT 6
+#define VCMD_SUBMIT_CMD 7
+#define VCMD_RESOURCE_BUSY_WAIT 8
+#define VCMD_FLUSH_FRONTBUFFER 9
+
+#define VCMD_BUSY_WAIT_FLAG_WAIT 1
 
 #endif
